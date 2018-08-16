@@ -91,42 +91,95 @@ let setWinner = (game) => {
 
       }
 
-       sets
+      for (let i in sets ){
+        compare(sets[i], game);
+      }
 }
 
-let compare = function(choice1,choice2) {
+let compare = (set, game) => {
+  let player1 = (set[0])? set[0]: null;
+  let player2 = (set[1])? set[1]: null;
+
+  if (!player1 || !player2){
+    return false;
+  }
+
+  let choice1 = player1.weapon;
+  let choice2 = player2.weapon;
 
   if (choice1 === choice2) {
-      return "It's a tie!";
+      return saveSetWinner('000000000000000000000000', game);
   }
   if (choice1 === "rock") {
       if (choice2 === "scissors") {
           // rock wins
-          return "You win!";
+          return saveSetWinner(player1.playerId, game)
       } else {
           // paper wins
-          return "You lose! Try again.";
+          return saveSetWinner(player2.playerId, game)
       }
   }
   if (choice1 === "paper") {
       if (choice2 === "rock") {
           // paper wins
-          return "You win!";
+          return saveSetWinner(player1.playerId, game)
       } else {
           // scissors wins
-          return "You lose! Try again.";
+          return saveSetWinner(player2.playerId, game)
       }
   }
   if (choice1 === "scissors") {
       if (choice2 === "rock") {
           // rock wins
-          return "You lose! Try again.";
+          return saveSetWinner(player1.playerId, game)
       } else {
           // scissors wins
-          return "You win!";
+          return saveSetWinner(player2.playerId, game)
       }
   }
 };
+
+let saveSetWinner = (playerId, game) => {
+  let update = {};
+  console.log(game.winnerSets.length);
+  if (game.winnerSets.length >= 3) {
+    let p1 = {
+      _id: null,
+      count: 0
+    };
+    let p2 = {
+      _id: null,
+      count: 0
+    };
+    for (let i in game.winnerSets) {
+        
+        if( game.winnerSets[i] == p1._id ){
+          p2['_id'] = game.winnerSets[i];
+          p2['count'] += 1
+        } else {
+          p1['_id'] = game.winnerSets[i];
+          p1['count'] += 1
+        }  
+    } 
+    let winnerId =   mongoose.Types.ObjectId(p2._id)
+    if ( p1.count > p2.count){
+      winnerId =   mongoose.Types.ObjectId(p1._id)
+    }
+    update = { winnerGame: winnerId }
+  } else {
+    game.winnerSets.push(playerId);
+    update = { winnerSets: game.winnerSets };
+  }
+  
+  let UpdateGame = Game.update(
+      { _id: mongoose.Types.ObjectId(game._id) }, 
+      update,
+      {upsert: true}
+    );
+  UpdateGame.exec((err, data) => {
+    console.log(data);
+  })
+} 
 
 exports.create = (req, res) => {
   let new_game =  new Game(req.body)

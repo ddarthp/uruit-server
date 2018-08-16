@@ -15,7 +15,7 @@ exports.get = (req, res) => {
 };
 
 exports.getById = (req, res) => {
-  let getPlayer = Player.findById(req.params.playerId);
+  let getPlayer = Player.findById(req.params.id);
   getPlayer.exec( (err, player) => {
     if (err)
       res.send(err);
